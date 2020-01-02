@@ -1,0 +1,6 @@
+{
+	"_id": "nesldr",
+	"name": "NES Loader",
+	"version": "0.1.0",
+	"description": "Ported from patois/nesldr"
+}
