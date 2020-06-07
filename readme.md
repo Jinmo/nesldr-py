@@ -12,7 +12,7 @@ This loader loads a maximum number of two 16k PRG ROM banks into the IDA databas
 This significantly improves the disassembly on the one hand, but as a consequence doesn't allow the ROM to be reassembled in one step on the other.
 
 ## Installation
-Copy the loader to %idadir%/loaders/nes.py
+Copy the loader to %idadir%/loaders/nes.py, and %idadir%/loaders/nesldr.
 
 ## Information for developers
 A copy of the input file is stored within the IDA Pro database by the loader. This allows all parts of the ROM to be accessed 
