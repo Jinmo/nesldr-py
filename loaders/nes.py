@@ -636,15 +636,20 @@ def describe_rom_image():
         hdr.rom_control_byte_0, hdr.rom_control_byte_1)
 
     add_extra_line(inf.min_ea, True, "\n;   ROM information\n"
-                              ";   ---------------\n;")
+                                     ";   ---------------\n;")
     add_extra_line(inf.min_ea, True, ";   Valid image header      : %s" % YES_NO(not hdr.is_corrupt_ines_hdr()))
     add_extra_line(inf.min_ea, True, ";   16K PRG-ROM page count  : %d" % hdr.prg_page_count_16k)
     add_extra_line(inf.min_ea, True, ";   8K CHR-ROM page count   : %d" % hdr.chr_page_count_8k)
-    add_extra_line(inf.min_ea, True, ";   Mirroring               : %s" % ("horizontal" if INES_MASK_H_MIRRORING(hdr.rom_control_byte_0) else "vertical"))
-    add_extra_line(inf.min_ea, True, ";   SRAM enabled            : %s" % YES_NO(INES_MASK_SRAM(hdr.rom_control_byte_0)))
-    add_extra_line(inf.min_ea, True, ";   512-byte trainer        : %s" % YES_NO(INES_MASK_TRAINER(hdr.rom_control_byte_0)))
-    add_extra_line(inf.min_ea, True, ";   Four screen VRAM layout : %s" % YES_NO(INES_MASK_VRAM_LAYOUT(hdr.rom_control_byte_0)))
-    add_extra_line(inf.min_ea, True, ";   Mapper                  : %s (Mapper #%d)" % (get_mapper_name(mapper), mapper))
+    add_extra_line(inf.min_ea, True, ";   Mirroring               : %s" % (
+        "horizontal" if INES_MASK_H_MIRRORING(hdr.rom_control_byte_0) else "vertical"))
+    add_extra_line(inf.min_ea, True,
+                   ";   SRAM enabled            : %s" % YES_NO(INES_MASK_SRAM(hdr.rom_control_byte_0)))
+    add_extra_line(inf.min_ea, True,
+                   ";   512-byte trainer        : %s" % YES_NO(INES_MASK_TRAINER(hdr.rom_control_byte_0)))
+    add_extra_line(inf.min_ea, True,
+                   ";   Four screen VRAM layout : %s" % YES_NO(INES_MASK_VRAM_LAYOUT(hdr.rom_control_byte_0)))
+    add_extra_line(inf.min_ea, True,
+                   ";   Mapper                  : %s (Mapper #%d)" % (get_mapper_name(mapper), mapper))
 
 
 # ----------------------------------------------------------------------
