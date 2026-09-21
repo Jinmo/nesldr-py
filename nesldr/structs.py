@@ -107,38 +107,75 @@ class ines_hdr(Structure):
     _fields_ = [
         ('id', c_char * 0x3),                          # NES
         ('term', c_ubyte),                             # 0x1A
-        # number of PRG-ROM pages
+        # iNES page count / NES 2.0 PRG-ROM size LSB
         ('prg_page_count_16k', c_ubyte),
-        # number of CHR-ROM pages
+        # iNES page count / NES 2.0 CHR-ROM size LSB
         ('chr_page_count_8k', c_ubyte),
         # flags describing ROM image
         ('rom_control_byte_0', c_ubyte),
         # flags describing ROM image
         ('rom_control_byte_1', c_ubyte),
-        # not used by this loader currently
+        # byte 8: iNES RAM count / NES 2.0 mapper and submapper
         ('ram_bank_count_8k', c_ubyte),
-        # should all be zero (not checked by loader)
+        # bytes 9-15: iNES flags/padding or NES 2.0 extension fields
         ('reserved', c_ubyte * 7),
     ]
+
+    def is_nes2_hdr(self):
+        return (self.rom_control_byte_1 & 0x0C) == 0x08
+
+    @property
+    def mapper_number(self):
+        mapper = INES_MASK_MAPPER_VERSION(
+            self.rom_control_byte_0, self.rom_control_byte_1)
+        if self.is_nes2_hdr():
+            mapper |= (self.ram_bank_count_8k & 0x0F) << 8
+        return mapper
+
+    @property
+    def submapper_number(self):
+        return (self.ram_bank_count_8k >> 4) if self.is_nes2_hdr() else 0
+
+    def _rom_size(self, lsb, msb, page_size):
+        if not self.is_nes2_hdr():
+            return lsb * page_size
+        if msb == 0x0F:
+            return (1 << (lsb >> 2)) * (2 * (lsb & 0x03) + 1)
+        return ((msb << 8) | lsb) * page_size
+
+    @property
+    def prg_rom_size(self):
+        return self._rom_size(self.prg_page_count_16k,
+                              self.reserved[0] & 0x0F, PRG_PAGE_SIZE)
+
+    @property
+    def chr_rom_size(self):
+        return self._rom_size(self.chr_page_count_8k,
+                              self.reserved[0] >> 4, CHR_PAGE_SIZE)
 
     # ----------------------------------------------------------------------
     #
     #      check if ROM image header is corrupt
     #
     def is_corrupt_ines_hdr(self):
-        return any(_ != 0 for _ in self.reserved)
+        if self.is_nes2_hdr():
+            return False
+        return any(_ != 0 for _ in self.reserved[2:])
 
     # ----------------------------------------------------------------------
     #
     #      fix iNES header internally
     #
 
-    def fix_ines_hdr(void):
-        diskdude = b"DiskDude\x00"
-
-        if(self.rom_control_byte_1[0] == diskdude[0] and self.ram_bank_count_8k == diskdude[1] and self.reserved == diskdude[2:]):
-            self.rom_control_byte_1[:] = b'\x00' * 9
-        self.reserved[:] = b'\x00' * sizeof(self.reserved)
+    def fix_ines_hdr(self):
+        if self.is_nes2_hdr():
+            return
+        if(bytes(self)[7:] in (b"DiskDude!", b"DiskDude\x00")):
+            self.rom_control_byte_1 = 0
+            self.ram_bank_count_8k = 0
+            self.reserved[0] = 0
+            self.reserved[1] = 0
+        self.reserved[2:] = b'\x00' * (sizeof(self.reserved) - 2)
         return
 
 
